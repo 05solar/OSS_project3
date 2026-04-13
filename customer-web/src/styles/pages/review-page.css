@@ -1,0 +1,44 @@
+.page-wrap { padding: 36px 28px 72px; }
+.page-inner { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+.page-hd { display: flex; flex-direction: column; gap: 5px; }
+.page-title { font-size: 2rem; font-weight: 500; color: var(--text); letter-spacing: -0.02em; }
+.rv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.rv-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: var(--shadow-sm);
+}
+.rv-top { display: flex; align-items: center; justify-content: space-between; }
+.rv-stars { display: flex; gap: 2px; }
+.star { font-size: 0.9rem; color: #E0D0D5; }
+.star.on { color: var(--pink); }
+.rv-menu { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+.rv-text { font-size: 0.85rem; color: var(--muted); line-height: 1.6; font-style: italic; }
+.empty-state { padding: 32px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+.write-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.write-hd { display: flex; flex-direction: column; gap: 4px; }
+.write-title { font-size: 1.1rem; font-weight: 500; }
+.write-form { display: flex; flex-direction: column; gap: 14px; }
+.btn-ai-gen {
+  align-self: flex-start; padding: 8px 16px;
+  background: var(--pink-light); border: 1px solid rgba(150, 0, 0, 0.25);
+  border-radius: var(--radius-xs); color: var(--pink);
+  font-size: 0.78rem; font-weight: 500; transition: all 0.15s;
+}
+.btn-ai-gen:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+.rv-ta { resize: vertical; }
+.submit-btn { align-self: flex-start; }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.auth-hint { font-size: 0.72rem; color: var(--muted); }
+
+@media (max-width: 600px) {
+  .page-wrap { padding: 24px 16px 48px; }
+  .page-title { font-size: 1.5rem; }
+  .rv-grid { grid-template-columns: 1fr; }
+  .write-card { padding: 18px 16px; }
+}
