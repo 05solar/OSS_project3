@@ -1,4 +1,10 @@
-.right-col { display: flex; flex-direction: column; gap: 14px; }
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 78px;
+}
 
 /* Cart */
 .cart-card {
@@ -109,6 +115,7 @@
 .rv-text { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
 
 @media (max-width: 768px) {
+  .right-col { position: static; }
   .cart-card { padding: 16px; }
   .cart-items { max-height: 180px; }
   .feedback-card { padding: 14px; }
