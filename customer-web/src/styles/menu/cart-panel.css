@@ -1,9 +1,18 @@
-.right-col {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  position: sticky;
-  top: 78px;
+.right-col-shell {
+  position: relative;
+  align-self: start;
+  width: 100%;
+  --cart-slot-height: 0px;
+}
+
+.cart-card-floating {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 /* Cart */
@@ -12,6 +21,8 @@
   border-radius: var(--radius); padding: 20px;
   display: flex; flex-direction: column; gap: 14px;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  max-height: calc(100vh - 94px);
 }
 .cart-hd { display: flex; align-items: center; justify-content: space-between; }
 .cart-title { font-size: 1rem; font-weight: 500; color: var(--text); }
@@ -23,7 +34,10 @@
   transition: all 0.15s;
 }
 .cart-clear-btn:hover { border-color: var(--pink); color: var(--pink); }
-.cart-items { display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+.cart-items {
+  display: flex; flex-direction: column; gap: 10px;
+  flex: 1; min-height: 0; overflow-y: auto;
+}
 .cart-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .cart-info { flex: 1; min-width: 0; }
 .cart-name { font-size: 0.88rem; font-weight: 500; display: block; }
@@ -78,6 +92,12 @@
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 18px;
   display: flex; flex-direction: column; gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.feedback-card-fixed {
+  margin-top: var(--cart-slot-height);
 }
 .feedback-hd { display: flex; align-items: center; justify-content: space-between; }
 .feedback-hd .sec-label {
@@ -114,9 +134,16 @@
 .rv-menu { color: var(--pink); font-weight: 500; }
 .rv-text { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
 
-@media (max-width: 768px) {
-  .right-col { position: static; }
-  .cart-card { padding: 16px; }
+@media (max-width: 640px) {
+  .right-col-shell { position: static; }
+  .cart-card-floating {
+    position: static;
+    transform: none !important;
+  }
+  .feedback-card-fixed {
+    margin-top: 14px;
+  }
+  .cart-card { max-height: none; padding: 16px; }
   .cart-items { max-height: 180px; }
   .feedback-card { padding: 14px; }
   .login-card { padding: 14px; }

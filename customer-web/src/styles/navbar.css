@@ -38,7 +38,7 @@
   border: none; border-radius: var(--radius-sm);
   font-size: 0.88rem; font-weight: 500;
   transition: background 0.15s;
-   margin-right: 50px;
+   margin-right: 44px;
 }
 .btn-login:hover { background: var(--pink-hover); }
 .btn-logout {
@@ -47,6 +47,7 @@
   border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   font-size: 0.88rem; font-weight: 500;
   transition: all 0.15s;
+  margin-right: 44px;
 }
 .btn-logout:hover { border-color: var(--pink); color: var(--pink); }
 
