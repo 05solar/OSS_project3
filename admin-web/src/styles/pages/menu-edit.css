@@ -25,6 +25,20 @@
   transition: background 0.15s;
 }
 .btn-register:hover { background: var(--pink-hover); }
+.btn-secondary, .btn-edit, .btn-inline {
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+.btn-secondary { padding: 13px 16px; }
+.btn-edit { padding: 6px 10px; }
+.btn-inline { padding: 0 14px; white-space: nowrap; }
+.action-row { display: flex; gap: 10px; }
+.inline-category { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.toggle-row { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.85rem; }
 
 .menu-list { display: flex; flex-direction: column; gap: 8px; max-height: 600px; overflow-y: auto; }
 .menu-row {
@@ -45,4 +59,8 @@
 .avail-on { background: var(--green-bg); color: var(--green); }
 .avail-off { background: var(--red-bg); color: var(--red); }
 
-@media (max-width: 900px) { .me-layout { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .me-layout { grid-template-columns: 1fr; }
+  .action-row { flex-direction: column; }
+  .inline-category { grid-template-columns: 1fr; }
+}

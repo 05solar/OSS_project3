@@ -1,6 +1,8 @@
 package com.example.order;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -115,10 +117,50 @@ public class OrderController {
         Integer totalSales = jdbc.sql("select coalesce(sum(total_amount), 0) from orders").query(Integer.class).single();
         Integer totalOrders = jdbc.sql("select count(*) from orders").query(Integer.class).single();
         Integer pendingOrders = jdbc.sql("select count(*) from orders where status in ('RECEIVED', 'COOKING')").query(Integer.class).single();
+        List<DailySalesPoint> dailySales = jdbc.sql("""
+                select substr(created_at, 1, 10) as sales_day,
+                       coalesce(sum(total_amount), 0) as total_sales,
+                       count(*) as total_orders
+                from orders
+                group by substr(created_at, 1, 10)
+                order by sales_day desc
+                limit 7
+                """).query((rs, rowNum) -> new DailySalesPoint(
+                        rs.getString("sales_day"),
+                        rs.getInt("total_sales"),
+                        rs.getInt("total_orders")))
+                .list();
+        List<HourlyOrderPoint> hourlyOrders = jdbc.sql("""
+                select substr(created_at, 12, 2) as sales_hour,
+                       count(*) as total_orders
+                from orders
+                where substr(created_at, 1, 10) = ?
+                group by substr(created_at, 12, 2)
+                order by sales_hour
+                """).param(LocalDate.now(ZoneOffset.UTC).toString())
+                .query((rs, rowNum) -> new HourlyOrderPoint(
+                        Integer.parseInt(rs.getString("sales_hour")),
+                        rs.getInt("total_orders")))
+                .list();
+
+        int todaySales = 0;
+        int todayOrders = 0;
+        for (DailySalesPoint point : dailySales) {
+            if (point.day().equals(LocalDate.now(ZoneOffset.UTC).toString())) {
+                todaySales = point.totalSales();
+                todayOrders = point.totalOrders();
+                break;
+            }
+        }
+
         return Map.of(
                 "totalSales", totalSales == null ? 0 : totalSales,
+                "todaySales", todaySales,
                 "totalOrders", totalOrders == null ? 0 : totalOrders,
-                "pendingOrders", pendingOrders == null ? 0 : pendingOrders
+                "todayOrders", todayOrders,
+                "pendingOrders", pendingOrders == null ? 0 : pendingOrders,
+                "dailySales", dailySales,
+                "hourlyOrders", hourlyOrders
         );
     }
 
@@ -151,5 +193,6 @@ public class OrderController {
     record OrderItemRequest(long menuId, String menuName, int quantity, int unitPrice, int etaMinutes) {}
     record OrderItemResponse(long menuId, String menuName, int quantity, int unitPrice, int etaMinutes) {}
     record OrderResponse(long id, long userId, String username, int totalAmount, String status, String createdAt, String notes, List<OrderItemResponse> items) {}
+    record DailySalesPoint(String day, int totalSales, int totalOrders) {}
+    record HourlyOrderPoint(int hour, int totalOrders) {}
 }
-

@@ -1,4 +1,12 @@
 .dashboard { display: flex; flex-direction: column; gap: 24px; }
+.mini-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.mini-card {
+  background: var(--white); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mini-card strong { font-size: 1.05rem; color: var(--text); }
+.mini-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
 
 /* Stats */
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
@@ -116,6 +124,17 @@
 }
 .qa-form { display: flex; flex-direction: column; gap: 12px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.inline-category { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.btn-inline, .btn-ghost, .btn-text {
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+.btn-inline {
+  border: 1px solid var(--border);
+  background: var(--white);
+  padding: 0 14px;
+}
 .btn-add-menu {
   width: 100%; padding: 14px;
   background: var(--pink); color: #fff;
@@ -125,6 +144,32 @@
   transition: background 0.15s;
 }
 .btn-add-menu:hover { background: var(--pink-hover); }
+.action-stack { display: flex; flex-direction: column; gap: 8px; }
+.btn-ghost {
+  border: 1px solid var(--border);
+  background: var(--white);
+  padding: 11px 14px;
+}
+.recent-menus {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+.recent-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.recent-row p { color: var(--muted); font-size: 0.8rem; }
+.btn-text {
+  border: none;
+  background: transparent;
+  color: var(--pink);
+  padding: 0;
+}
 
 /* Status badges */
 .st-received { background: var(--amber-bg); color: var(--amber); }
@@ -189,12 +234,15 @@
 /* Responsive */
 @media (max-width: 1200px) {
   .stats-row { grid-template-columns: 1fr 1fr; }
+  .mini-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 900px) {
   .ai-cards { grid-template-columns: 1fr; }
   .bottom-grid { grid-template-columns: 1fr; }
   .orders-table { min-width: 760px; }
+  .inline-category { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .stats-row { grid-template-columns: 1fr; }
+  .mini-grid { grid-template-columns: 1fr; }
 }

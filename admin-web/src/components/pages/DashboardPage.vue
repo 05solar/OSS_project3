@@ -7,12 +7,25 @@ defineProps({
   orders: Array,
   reviews: Array,
   menus: Array,
+  categories: Array,
   newMenu: Object,
+  editingMenuId: Number,
+  categoryDraft: String,
   aiSuggestion: String,
   quality: String
 })
 
-const emit = defineEmits(['createMenu', 'suggestMenu', 'evaluateQuality', 'updateNewMenu', 'updateStatus'])
+const emit = defineEmits([
+  'saveMenu',
+  'suggestMenu',
+  'evaluateQuality',
+  'updateNewMenu',
+  'updateStatus',
+  'updateCategoryDraft',
+  'createCategory',
+  'startEditMenu',
+  'cancelEdit'
+])
 const updating = ref(new Set())
 
 const STATUS_OPTIONS = [
@@ -53,10 +66,10 @@ function onStatusChange(order, event) {
       <article class="stat-card">
         <div class="sc-top">
           <div class="sc-icon pink">매출</div>
-          <span class="sc-trend neutral">누적</span>
+          <span class="sc-trend neutral">오늘</span>
         </div>
-        <p class="sc-label">총 매출</p>
-        <strong class="sc-val">{{ dashboard.sales.totalSales.toLocaleString() }}원</strong>
+        <p class="sc-label">오늘 매출</p>
+        <strong class="sc-val">{{ dashboard.sales.todaySales.toLocaleString() }}원</strong>
       </article>
       <article class="stat-card">
         <div class="sc-top">
@@ -85,6 +98,25 @@ function onStatusChange(order, event) {
     </div>
     <div class="stats-row loading-row" v-else>
       <div class="stat-card skeleton" v-for="i in 4" :key="i"></div>
+    </div>
+
+    <div class="mini-grid" v-if="dashboard">
+      <article class="mini-card">
+        <p class="mini-label">누적 매출</p>
+        <strong>{{ dashboard.sales.totalSales.toLocaleString() }}원</strong>
+      </article>
+      <article class="mini-card">
+        <p class="mini-label">오늘 주문</p>
+        <strong>{{ dashboard.sales.todayOrders }}건</strong>
+      </article>
+      <article class="mini-card">
+        <p class="mini-label">대기 주문</p>
+        <strong>{{ dashboard.sales.pendingOrders }}건</strong>
+      </article>
+      <article class="mini-card">
+        <p class="mini-label">5점 후기</p>
+        <strong>{{ dashboard.reviews.ratingDistribution.find((item) => item.rating === 5)?.count || 0 }}개</strong>
+      </article>
     </div>
 
     <div class="ai-section">
@@ -176,7 +208,7 @@ function onStatusChange(order, event) {
       </article>
 
       <article class="quick-add-card">
-        <h3 class="card-title">빠른 메뉴 등록</h3>
+        <h3 class="card-title">{{ editingMenuId ? '빠른 메뉴 수정' : '빠른 메뉴 등록' }}</h3>
         <div class="qa-form">
           <div class="fg">
             <label class="flabel">메뉴명</label>
@@ -186,14 +218,17 @@ function onStatusChange(order, event) {
             <div class="fg">
               <label class="flabel">카테고리</label>
               <select class="finput" :value="newMenu.category" @change="emit('updateNewMenu', { category: $event.target.value })">
-                <option>한식</option><option>양식</option><option>일식</option>
-                <option>음료</option><option>중식</option><option>분식</option><option>디저트</option>
+                <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
               </select>
             </div>
             <div class="fg">
               <label class="flabel">가격</label>
               <input class="finput" type="number" :value="newMenu.price" @input="emit('updateNewMenu', { price: Number($event.target.value) })" />
             </div>
+          </div>
+          <div class="inline-category">
+            <input class="finput" :value="categoryDraft" @input="emit('updateCategoryDraft', $event.target.value)" placeholder="새 카테고리 이름" />
+            <button class="btn-inline" @click="emit('createCategory')">추가</button>
           </div>
           <div class="fg">
             <label class="flabel">조리 시간 (분)</label>
@@ -204,14 +239,31 @@ function onStatusChange(order, event) {
             <input class="finput" :value="newMenu.description" @input="emit('updateNewMenu', { description: $event.target.value })" placeholder="메뉴 설명" />
           </div>
           <div class="fg">
+            <label class="flabel">키워드</label>
+            <input class="finput" :value="newMenu.keywords" @input="emit('updateNewMenu', { keywords: $event.target.value })" placeholder="쉼표로 구분" />
+          </div>
+          <div class="fg">
             <label class="flabel">이미지 URL</label>
             <input class="finput" :value="newMenu.imageUrl" @input="emit('updateNewMenu', { imageUrl: $event.target.value })" placeholder="https://..." />
           </div>
         </div>
-        <button class="btn-add-menu" @click="emit('createMenu')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          메뉴 등록
-        </button>
+        <div class="action-stack">
+          <button class="btn-add-menu" @click="emit('saveMenu')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {{ editingMenuId ? '메뉴 저장' : '메뉴 등록' }}
+          </button>
+          <button v-if="editingMenuId" class="btn-ghost" @click="emit('cancelEdit')">수정 취소</button>
+        </div>
+
+        <div class="recent-menus" v-if="menus.length">
+          <div class="recent-row" v-for="menu in menus.slice(0, 4)" :key="menu.id">
+            <div>
+              <strong>{{ menu.name }}</strong>
+              <p>{{ menu.category }} · {{ menu.price.toLocaleString() }}원</p>
+            </div>
+            <button class="btn-text" @click="emit('startEditMenu', menu)">수정</button>
+          </div>
+        </div>
       </article>
     </div>
   </div>

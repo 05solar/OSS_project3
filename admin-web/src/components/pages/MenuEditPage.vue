@@ -1,7 +1,22 @@
 <script setup>
 import "./../../styles/pages/menu-edit.css"
-defineProps({ menus: Array, newMenu: Object })
-const emit = defineEmits(['createMenu', 'updateNewMenu'])
+
+defineProps({
+  menus: Array,
+  categories: Array,
+  newMenu: Object,
+  editingMenuId: Number,
+  categoryDraft: String
+})
+
+const emit = defineEmits([
+  'saveMenu',
+  'updateNewMenu',
+  'updateCategoryDraft',
+  'createCategory',
+  'startEditMenu',
+  'cancelEdit'
+])
 </script>
 
 <template>
@@ -12,9 +27,8 @@ const emit = defineEmits(['createMenu', 'updateNewMenu'])
     </div>
 
     <div class="me-layout">
-      <!-- Form -->
       <article class="form-card">
-        <h3 class="card-title">신규 메뉴 등록</h3>
+        <h3 class="card-title">{{ editingMenuId ? '메뉴 수정' : '신규 메뉴 등록' }}</h3>
         <div class="form-body">
           <div class="fg">
             <label class="flabel">메뉴명</label>
@@ -28,14 +42,17 @@ const emit = defineEmits(['createMenu', 'updateNewMenu'])
             <div class="fg">
               <label class="flabel">카테고리</label>
               <select class="finput" :value="newMenu.category" @change="emit('updateNewMenu', { category: $event.target.value })">
-                <option>한식</option><option>양식</option><option>일식</option>
-                <option>음료</option><option>중식</option><option>분식</option><option>디저트</option>
+                <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
               </select>
             </div>
             <div class="fg">
               <label class="flabel">키워드</label>
               <input class="finput" :value="newMenu.keywords" @input="emit('updateNewMenu', { keywords: $event.target.value })" placeholder="키워드 (쉼표 구분)" />
             </div>
+          </div>
+          <div class="inline-category">
+            <input class="finput" :value="categoryDraft" @input="emit('updateCategoryDraft', $event.target.value)" placeholder="새 카테고리 이름" />
+            <button class="btn-inline" @click="emit('createCategory')">카테고리 추가</button>
           </div>
           <div class="form-row">
             <div class="fg">
@@ -51,14 +68,20 @@ const emit = defineEmits(['createMenu', 'updateNewMenu'])
             <label class="flabel">이미지 URL</label>
             <input class="finput" :value="newMenu.imageUrl" @input="emit('updateNewMenu', { imageUrl: $event.target.value })" placeholder="https://..." />
           </div>
+          <label class="toggle-row">
+            <input type="checkbox" :checked="newMenu.available" @change="emit('updateNewMenu', { available: $event.target.checked })" />
+            <span>판매중 상태로 표시</span>
+          </label>
         </div>
-        <button class="btn-register" @click="emit('createMenu')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          메뉴 등록
-        </button>
+        <div class="action-row">
+          <button class="btn-register" @click="emit('saveMenu')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            {{ editingMenuId ? '메뉴 저장' : '메뉴 등록' }}
+          </button>
+          <button v-if="editingMenuId" class="btn-secondary" @click="emit('cancelEdit')">취소</button>
+        </div>
       </article>
 
-      <!-- Menu list -->
       <article class="list-card">
         <div class="card-hd">
           <h3 class="card-title">등록된 메뉴</h3>
@@ -78,6 +101,7 @@ const emit = defineEmits(['createMenu', 'updateNewMenu'])
               <span class="mr-avail" :class="menu.available ? 'avail-on' : 'avail-off'">
                 {{ menu.available ? '판매중' : '판매중지' }}
               </span>
+              <button class="btn-edit" @click="emit('startEditMenu', menu)">수정</button>
             </div>
           </div>
         </div>

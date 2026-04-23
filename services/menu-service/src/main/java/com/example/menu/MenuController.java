@@ -24,6 +24,7 @@ public class MenuController {
         this.jdbc = jdbc;
         initSchema();
         seedMenus();
+        syncCategoriesFromMenus();
     }
 
     @GetMapping
@@ -54,17 +55,27 @@ public class MenuController {
 
     @GetMapping("/categories")
     public List<String> categories() {
-        return jdbc.sql("select distinct category from menus order by category").query(String.class).list();
+        return jdbc.sql("select name from categories order by name").query(String.class).list();
+    }
+
+    @PostMapping("/categories")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, Object> createCategory(@RequestBody CategoryRequest request) {
+        String category = normalizeCategory(request.name());
+        upsertCategory(category);
+        return Map.of("status", "created", "category", category);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> create(@RequestBody MenuRequest request) {
+        String category = normalizeCategory(request.category());
+        upsertCategory(category);
         jdbc.sql("""
                 insert into menus(name, description, category, keywords, price, image_url, eta_minutes, available)
                 values (?, ?, ?, ?, ?, ?, ?, ?)
                 """).params(List.of(
-                        request.name(), request.description(), request.category(), request.keywords(),
+                        request.name(), request.description(), category, request.keywords(),
                         request.price(), request.imageUrl(), request.etaMinutes(), request.available() ? 1 : 0))
                 .update();
         return Map.of("status", "created");
@@ -72,12 +83,14 @@ public class MenuController {
 
     @PutMapping("/{id}")
     public Map<String, Object> update(@PathVariable long id, @RequestBody MenuRequest request) {
+        String category = normalizeCategory(request.category());
+        upsertCategory(category);
         jdbc.sql("""
                 update menus
                 set name = ?, description = ?, category = ?, keywords = ?, price = ?, image_url = ?, eta_minutes = ?, available = ?
                 where id = ?
                 """).params(List.of(
-                        request.name(), request.description(), request.category(), request.keywords(), request.price(),
+                        request.name(), request.description(), category, request.keywords(), request.price(),
                         request.imageUrl(), request.etaMinutes(), request.available() ? 1 : 0, id))
                 .update();
         return Map.of("status", "updated");
@@ -105,6 +118,12 @@ public class MenuController {
 
     private void initSchema() {
         jdbc.sql("""
+                create table if not exists categories (
+                  id integer primary key autoincrement,
+                  name text not null unique
+                )
+                """).update();
+        jdbc.sql("""
                 create table if not exists menus (
                   id integer primary key autoincrement,
                   name text not null,
@@ -119,26 +138,41 @@ public class MenuController {
                 """).update();
     }
 
+    private void syncCategoriesFromMenus() {
+        List<String> menuCategories = jdbc.sql("select distinct category from menus order by category").query(String.class).list();
+        for (String category : menuCategories) {
+            upsertCategory(category);
+        }
+    }
+
+    private void upsertCategory(String rawCategory) {
+        String category = normalizeCategory(rawCategory);
+        jdbc.sql("insert or ignore into categories(name) values (?)").param(category).update();
+    }
+
+    private String normalizeCategory(String category) {
+        if (category == null || category.isBlank()) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST, "category is required");
+        }
+        return category.trim();
+    }
+
     private void seedMenus() {
         Long count = jdbc.sql("select count(*) from menus").query(Long.class).single();
         if (count != null && count == 0) {
             List<MenuRequest> seeds = List.of(
-                    // 양식
                     new MenuRequest("트러플 크림 파스타", "트러플 향이 풍부한 고급 크림 파스타", "양식", "트러플,크림,파스타,고급,데이트", 19000, "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5", 18, true),
                     new MenuRequest("안심 스테이크", "부드러운 안심으로 만든 프리미엄 스테이크", "양식", "스테이크,고기,고급,특별한날", 35000, "https://images.unsplash.com/photo-1546833998-877b37c2e5c6", 25, true),
                     new MenuRequest("해산물 토마토 파스타", "신선한 해산물과 토마토 소스의 파스타", "양식", "해산물,토마토,파스타,새우,홍합", 16000, "https://images.unsplash.com/photo-1563379926898-05f4575a45d8", 18, true),
                     new MenuRequest("마르게리타 피자", "신선한 토마토 소스와 모짜렐라 피자", "양식", "피자,치즈,토마토,이탈리안", 15000, "https://images.unsplash.com/photo-1513104890138-7c749659a591", 20, true),
-                    // 음료
                     new MenuRequest("아메리카노", "깔끔하고 진한 에스프레소 아메리카노", "음료", "커피,아메리카노,시원함,디저트", 4500, "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085", 5, true),
                     new MenuRequest("카페라떼", "부드러운 우유 거품과 에스프레소", "음료", "커피,라떼,부드러움,디저트", 5500, "https://images.unsplash.com/photo-1561882468-9110d70d03a0", 5, true),
                     new MenuRequest("레몬에이드", "상큼한 레몬 에이드", "음료", "레몬,상큼,시원함,비커피", 6000, "https://images.unsplash.com/photo-1556679343-c7306c1976bc", 5, true),
                     new MenuRequest("생과일 주스", "신선한 제철 과일로 만든 주스", "음료", "과일,건강,신선함,비커피", 7000, "https://images.unsplash.com/photo-1589733955941-5eeaf752f6dd", 7, true),
-                    // 일식
                     new MenuRequest("연어 사시미", "신선한 연어 회", "일식", "연어,회,신선함,해산물,고급", 22000, "https://images.unsplash.com/photo-1617196034183-421b4040ed20", 10, true),
                     new MenuRequest("돈카츠 정식", "바삭한 돈카츠와 밥·된장국 세트", "일식", "돈카츠,바삭,정식,아이동반", 14000, "https://images.unsplash.com/photo-1604908176997-431f3d4cfe3a", 15, true),
                     new MenuRequest("규동", "부드러운 소고기 덮밥", "일식", "소고기,덮밥,든든함,간단", 12000, "https://images.unsplash.com/photo-1547592180-85f173990554", 12, true),
                     new MenuRequest("새우 튀김 우동", "탱탱한 우동면과 바삭한 새우 튀김", "일식", "우동,새우,튀김,따뜻함,국물", 11000, "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d", 13, true),
-                    // 한식
                     new MenuRequest("된장찌개", "구수한 된장 국물의 한국 전통 찌개", "한식", "된장,국물,따뜻함,구수함", 8000, "https://images.unsplash.com/photo-1583224964978-2f4f8b5c6b1f", 12, true),
                     new MenuRequest("제육볶음", "매콤달콤한 돼지고기 볶음", "한식", "돼지고기,매콤,볶음,든든함", 10000, "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d", 12, true),
                     new MenuRequest("갈비탕", "진한 사골 국물의 갈비탕", "한식", "갈비,국물,따뜻함,고급,특별한날", 14000, "https://images.unsplash.com/photo-1547592180-85f173990554", 20, true),
@@ -150,7 +184,7 @@ public class MenuController {
         }
     }
 
+    record CategoryRequest(String name) {}
     record MenuRequest(String name, String description, String category, String keywords, int price, String imageUrl, int etaMinutes, boolean available) {}
     record MenuItem(long id, String name, String description, String category, String keywords, int price, String imageUrl, int etaMinutes, boolean available) {}
 }
-

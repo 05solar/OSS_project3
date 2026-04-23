@@ -15,17 +15,25 @@ const dashboard = ref(null)
 const orders = ref([])
 const reviews = ref([])
 const menus = ref([])
+const categories = ref([])
 const loadError = ref('')
-const newMenu = ref({
-  name: '',
-  description: '',
-  category: '한식',
-  keywords: '',
-  price: 10000,
-  imageUrl: '',
-  etaMinutes: 15,
-  available: true
-})
+const categoryDraft = ref('')
+const editingMenuId = ref(null)
+
+function emptyMenu(category = '한식') {
+  return {
+    name: '',
+    description: '',
+    category,
+    keywords: '',
+    price: 10000,
+    imageUrl: '',
+    etaMinutes: 15,
+    available: true
+  }
+}
+
+const newMenu = ref(emptyMenu())
 const aiSuggestion = ref('')
 const quality = ref('')
 const currentPage = ref('dashboard')
@@ -41,6 +49,23 @@ async function api(path, options = {}) {
   return response.json()
 }
 
+function resetMenuForm() {
+  newMenu.value = emptyMenu(categories.value[0] || '한식')
+  editingMenuId.value = null
+}
+
+async function refreshMenusAndCategories() {
+  const [menuList, categoryList] = await Promise.all([
+    api('/admin/menus'),
+    api('/admin/categories')
+  ])
+  menus.value = menuList
+  categories.value = categoryList
+  if (!newMenu.value.category && categories.value.length) {
+    newMenu.value.category = categories.value[0]
+  }
+}
+
 async function loginAdmin() {
   try {
     loadError.value = ''
@@ -54,16 +79,21 @@ async function loginAdmin() {
 
 async function loadDashboard() {
   try {
-    const [dash, ord, rev, men] = await Promise.all([
+    const [dash, ord, rev, men, cats] = await Promise.all([
       api('/admin/dashboard'),
       api('/admin/orders'),
       api('/admin/reviews'),
-      api('/admin/menus')
+      api('/admin/menus'),
+      api('/admin/categories')
     ])
     dashboard.value = dash
     orders.value = ord
     reviews.value = rev
     menus.value = men
+    categories.value = cats
+    if (!newMenu.value.category && categories.value.length) {
+      newMenu.value.category = categories.value[0]
+    }
   } catch (e) {
     loadError.value = '데이터를 불러오지 못했습니다. 새로고침을 눌러 주세요.'
   }
@@ -71,8 +101,48 @@ async function loadDashboard() {
 
 async function createMenu() {
   await api('/admin/menus', { method: 'POST', body: JSON.stringify(newMenu.value) })
-  menus.value = await api('/admin/menus')
+  await refreshMenusAndCategories()
   dashboard.value = await api('/admin/dashboard')
+  resetMenuForm()
+}
+
+async function saveMenu() {
+  if (editingMenuId.value == null) {
+    await createMenu()
+    return
+  }
+  await api(`/admin/menus?id=${editingMenuId.value}`, { method: 'PUT', body: JSON.stringify(newMenu.value) })
+  await refreshMenusAndCategories()
+  dashboard.value = await api('/admin/dashboard')
+  resetMenuForm()
+}
+
+function startEditMenu(menu) {
+  editingMenuId.value = menu.id
+  newMenu.value = {
+    name: menu.name,
+    description: menu.description,
+    category: menu.category,
+    keywords: menu.keywords,
+    price: menu.price,
+    imageUrl: menu.imageUrl,
+    etaMinutes: menu.etaMinutes,
+    available: menu.available
+  }
+  currentPage.value = 'menu-editor'
+}
+
+function cancelMenuEdit() {
+  resetMenuForm()
+}
+
+async function createCategory() {
+  const name = categoryDraft.value.trim()
+  if (!name) return
+  await api('/admin/categories', { method: 'POST', body: JSON.stringify({ name }) })
+  categories.value = await api('/admin/categories')
+  newMenu.value.category = name
+  categoryDraft.value = ''
 }
 
 async function suggestMenu() {
@@ -92,6 +162,7 @@ async function updateOrderStatus(orderId, newStatus, done) {
       body: JSON.stringify({ status: newStatus })
     })
     orders.value = await api('/admin/orders')
+    dashboard.value = await api('/admin/dashboard')
   } catch (e) {
     loadError.value = '상태 변경에 실패했습니다.'
   } finally {
@@ -143,20 +214,35 @@ onMounted(loginAdmin)
         :orders="orders"
         :reviews="reviews"
         :menus="menus"
+        :categories="categories"
         :newMenu="newMenu"
+        :editingMenuId="editingMenuId"
+        :categoryDraft="categoryDraft"
         :aiSuggestion="aiSuggestion"
         :quality="quality"
-        @createMenu="createMenu"
+        @saveMenu="saveMenu"
         @suggestMenu="suggestMenu"
         @evaluateQuality="evaluateQuality"
         @updateNewMenu="newMenu = { ...newMenu, ...$event }"
         @updateStatus="updateOrderStatus"
+        @updateCategoryDraft="categoryDraft = $event"
+        @createCategory="createCategory"
+        @startEditMenu="startEditMenu"
+        @cancelEdit="cancelMenuEdit"
       />
       <MenuEditPage
         v-if="currentPage === 'menu-editor'"
-        :menus="menus" :newMenu="newMenu"
-        @createMenu="createMenu"
+        :menus="menus"
+        :categories="categories"
+        :newMenu="newMenu"
+        :editingMenuId="editingMenuId"
+        :categoryDraft="categoryDraft"
+        @saveMenu="saveMenu"
         @updateNewMenu="newMenu = { ...newMenu, ...$event }"
+        @updateCategoryDraft="categoryDraft = $event"
+        @createCategory="createCategory"
+        @startEditMenu="startEditMenu"
+        @cancelEdit="cancelMenuEdit"
       />
       <OrderManagementPage v-if="currentPage === 'orders'" :orders="orders" @updateStatus="updateOrderStatus" />
       <AnalysisPage v-if="currentPage === 'analytics'" :dashboard="dashboard" :orders="orders" :reviews="reviews" />

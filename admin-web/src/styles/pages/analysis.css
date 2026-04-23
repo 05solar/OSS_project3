@@ -24,6 +24,7 @@
 .sc-val { font-size: 1.85rem; font-weight: 500; color: var(--text); letter-spacing: -0.03em; }
 
 .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.top-grid { margin-bottom: 4px; }
 .data-card {
   background: var(--white); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm);
@@ -37,6 +38,29 @@
   border: 1px solid var(--border); color: var(--muted);
 }
 .order-list, .rv-list { display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto; }
+.metric-list { display: flex; flex-direction: column; gap: 10px; }
+.metric-row {
+  display: grid;
+  grid-template-columns: 78px 1fr 90px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+}
+.bar-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #f3e8ee;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f472b6, #fb7185);
+  border-radius: 999px;
+}
 
 .order-row {
   display: flex; align-items: center; gap: 12px;

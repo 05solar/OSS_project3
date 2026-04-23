@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -45,19 +46,50 @@ def health() -> dict[str, str]:
 def analyze_traffic(payload: dict[str, Any]) -> dict[str, Any]:
     summary = payload.get("salesSummary", {}) if isinstance(payload, dict) else {}
     pending = int(summary.get("pendingOrders", 0))
-    total_orders = int(summary.get("totalOrders", 0))
+    hourly_orders = summary.get("hourlyOrders", [])
+    current_hour = datetime.now().hour
+    current_hour_orders = 0
+    peak_hour = current_hour
+    peak_orders = 0
+
+    for point in hourly_orders:
+        if not isinstance(point, dict):
+            continue
+        hour = int(point.get("hour", 0))
+        total = int(point.get("totalOrders", 0))
+        if hour == current_hour:
+            current_hour_orders = total
+        if total > peak_orders:
+            peak_orders = total
+            peak_hour = hour
+
+    # 시간대별 분포와 현재 대기 주문 수를 함께 사용해 혼잡도를 계산한다.
+    score = current_hour_orders * 2 + pending
+    if current_hour in {11, 12, 13, 18, 19, 20}:
+        score += 2
+
     level = "여유"
-    wait_minutes = 10
-    if pending >= 5 or total_orders >= 15:
+    wait_minutes = 8
+    if score >= 8:
         level = "혼잡"
         wait_minutes = 25
-    elif pending >= 2:
+    elif score >= 4:
         level = "보통"
         wait_minutes = 16
+
+    peak_label = f"{peak_hour:02d}:00" if peak_orders else "데이터 없음"
+    message = (
+        f"현재 {current_hour:02d}시 기준 예상 혼잡도는 {level} 수준이며 약 {wait_minutes}분 대기가 예상됩니다. "
+        f"오늘 가장 주문이 몰린 시간대는 {peak_label} 입니다."
+    )
+
     return {
         "trafficLevel": level,
         "estimatedWaitMinutes": wait_minutes,
-        "message": f"현재 매장 상태는 {level} 수준이며 예상 대기 시간은 약 {wait_minutes}분입니다.",
+        "currentHour": current_hour,
+        "currentHourOrders": current_hour_orders,
+        "peakHour": peak_label,
+        "message": message,
     }
 
 
