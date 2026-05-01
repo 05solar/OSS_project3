@@ -1,8 +1,0 @@
-server:
-  port: 8083
-
-spring:
-  datasource:
-    url: jdbc:sqlite:${ORDER_DB_PATH:/data/order.db}
-    driver-class-name: org.sqlite.JDBC
-

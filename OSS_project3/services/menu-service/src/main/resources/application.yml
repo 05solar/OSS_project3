@@ -1,8 +1,0 @@
-server:
-  port: 8082
-
-spring:
-  datasource:
-    url: jdbc:sqlite:${MENU_DB_PATH:/data/menu.db}
-    driver-class-name: org.sqlite.JDBC
-
