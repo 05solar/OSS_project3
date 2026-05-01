@@ -1,0 +1,51 @@
+.rv-page { display: flex; flex-direction: column; gap: 24px; }
+.page-hd { display: flex; flex-direction: column; gap: 6px; }
+.page-title { font-size: 1.8rem; font-weight: 500; color: var(--text); letter-spacing: -0.02em; }
+
+.stats-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.st-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 18px 26px; min-width: 130px;
+  box-shadow: var(--shadow-sm);
+}
+.st-lbl {
+  font-size: 0.78rem; font-weight: 500; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+.st-val { font-size: 1.75rem; font-weight: 500; color: var(--text); }
+.st-val.pink { color: var(--pink); }
+
+.rv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+.rv-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: var(--shadow-sm);
+}
+.rv-top { display: flex; align-items: center; justify-content: space-between; }
+.rv-menu { font-size: 0.94rem; font-weight: 500; color: var(--text); }
+.rv-stars { display: flex; gap: 2px; }
+.rv-star { font-size: 0.9rem; color: #D0C8CB; }
+.rv-star.on { color: var(--pink); }
+.rv-text { font-size: 0.88rem; color: var(--muted); line-height: 1.65; font-style: italic; flex: 1; }
+.rv-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rv-source {
+  align-self: flex-start; font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: var(--radius-pill);
+  background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+}
+.rv-delete-btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 7px 12px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+.rv-delete-btn:hover { background: #fecaca; color: #991b1b; }
+.rv-delete-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+.empty-state { padding: 56px; text-align: center; color: var(--muted); font-size: 0.94rem; }

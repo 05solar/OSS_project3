@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+app:
+  jwt-secret: ${JWT_SECRET:change-me}
+  auth-base-url: ${AUTH_BASE_URL:http://localhost:8081}
+  menu-base-url: ${MENU_BASE_URL:http://localhost:8082}
+  order-base-url: ${ORDER_BASE_URL:http://localhost:8083}
+  review-base-url: ${REVIEW_BASE_URL:http://localhost:8084}
+  ai-recommendation-base-url: ${AI_RECOMMENDATION_BASE_URL:http://localhost:8001}
+  ai-review-writer-base-url: ${AI_REVIEW_WRITER_BASE_URL:http://localhost:8002}
+  ai-operations-base-url: ${AI_OPERATIONS_BASE_URL:http://localhost:8003}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger
+    urls-primary-name: Gateway API
+    urls:
+      - name: Gateway API
+        url: /v3/api-docs
+      - name: Auth Service API
+        url: /api-docs/auth
+      - name: Menu Service API
+        url: /api-docs/menu
+      - name: Order Service API
+        url: /api-docs/order
+      - name: Review Service API
+        url: /api-docs/review
+      - name: AI Recommendation API
+        url: /api-docs/ai-recommendation
+      - name: AI Review Writer API
+        url: /api-docs/ai-review-writer
+      - name: AI Operations API
+        url: /api-docs/ai-operations
