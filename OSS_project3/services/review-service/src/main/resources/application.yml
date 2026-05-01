@@ -1,0 +1,8 @@
+server:
+  port: 8084
+
+spring:
+  datasource:
+    url: jdbc:sqlite:${REVIEW_DB_PATH:/data/review.db}
+    driver-class-name: org.sqlite.JDBC
+
