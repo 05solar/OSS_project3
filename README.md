@@ -1,10 +1,9 @@
-![customer](assets/customer.png)
-![admin](assets/admin.png)
+
 
 # CAT TABLE — 식당 MSA 프로젝트
 
-![고객 화면](OSS_project3/assets/oss3-restaurant.png)
-![관리자 대시보드](OSS_project3/assets/oss3-admin.png)
+![customer](assets/customer.png)
+![admin](assets/admin.png)
 
 고객용·관리자용 식당 서비스를 마이크로서비스 아키텍처(MSA)로 구현한 프로젝트입니다.  
 **Docker Compose 명령어 하나**로 전체 서비스를 로컬에서 실행할 수 있습니다.
